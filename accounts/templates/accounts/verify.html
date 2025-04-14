@@ -4,6 +4,8 @@
 {% block content %}
 <div class="container my-5" style="max-width: 500px;">
   <h3 class="mb-4 fw-bold text-center">직군 인증</h3>
+  <p>학생은 1)본인의 이름과 2)전공이 모두 나타나도록 학생증 사진 또는 포털 학사정보 스크린샷을 인증해주세요. 이름과 전공을 제외한 개인정보는 모두 가려주세요.</p>
+  <p>재직자는 어쩌고저쩌고 면허증과 자격증을 인증해주세요?</p>
 
   {% if form.errors %}
     <div class="alert alert-danger">
@@ -22,8 +24,7 @@
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
   
-    <!-- 인증 이미지 업로드 -->
-    <div class="mb-4">
+    <div class="mb-3">
       {{ form.document.label_tag }}
       {{ form.document }}
       {% if form.document.errors %}

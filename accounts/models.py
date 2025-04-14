@@ -63,41 +63,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_verified(self):
         return self.verification_status == 'approved'
 
-
 class LicenseVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='license')
     document = models.FileField(upload_to="licenses/")
-    status = models.CharField(
-        choices=[
-            ('대기', '대기'),
-            ('승인', '승인'),
-            ('거절', '거절')
-        ],
-        default='대기'
-    )
     submitted_at = models.DateTimeField(auto_now_add=True)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
-
+    
     def __str__(self):
-        return f"{self.user.username} - {self.status}"
-
-    def is_pending(self):
-        return self.status == "대기"
-
-    def approve(self):
-        self.status = "승인"
-        self.reviewed_at = timezone.now()
-        self.user.verification_status = "approved"
-        self.user.save()
-        self.save()
-
-    def reject(self):
-        self.status = "거절"
-        self.reviewed_at = timezone.now()
-        self.user.verification_status = "rejected"
-        self.user.save()
-        self.save()
-
+        return f"{self.user.username} - 제출됨"
 
 class PhoneVerification(models.Model):
     phone_number = models.CharField(max_length=20)

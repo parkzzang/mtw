@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from .forms import SignupForm, VerificationForm, LoginForm
 from django.http import JsonResponse
-from .models import PhoneVerification
+from .models import PhoneVerification, LicenseVerification
 from .utils import send_verification_code
 from django.utils import timezone
 from datetime import timedelta
@@ -117,22 +117,40 @@ def verify_code_view(request):
 
 @login_required
 def verify_view(request):
-    if request.user.is_verified:
-        return redirect('main:index')  # 이미 인증된 사용자는 홈으로
+    user = request.user
 
+    # 상태별 분기
+    if user.verification_status == 'pending':
+        submitted_at = None
+        try:
+            submitted_at = user.license.submitted_at
+        except LicenseVerification.DoesNotExist:
+            pass
+
+        return render(request, 'accounts/verify_submitted.html', {
+            'submitted_at': submitted_at
+        })
+
+
+    elif user.verification_status == 'approved':
+        return redirect('main:index')  # 또는 마이페이지
+
+    elif user.verification_status == 'rejected':
+        return render(request, 'accounts/verify_rejected.html')  # ✅ 반려 안내 페이지
+
+    # 미제출인 경우 (not_submitted)
     if request.method == 'POST':
-        form = VerificationForm(request.POST, request.FILES, instance=request.user)
+        form = VerificationForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.verification_status = 'pending'  # ✅ 상태 변경
-            user.save()
-            return render(request, 'accounts/verify_submitted.html')  # 제출 완료 안내
-        else:
-            print("❌ 폼 오류 발생:", form.errors)
+            form.save(user)
+            return render(request, 'accounts/verify_submitted.html', {
+                'submitted_at': user.license.submitted_at
+            })
     else:
-        form = VerificationForm(instance=request.user)
+        form = VerificationForm()
 
     return render(request, 'accounts/verify.html', {'form': form})
+
 
 def verified_required(view_func):
     def _wrapped(request, *args, **kwargs):
@@ -178,3 +196,10 @@ def mypage_view(request):
         return render(request, "accounts/verify_submitted.html")
 
     return render(request, "accounts/mypage.html", {"user": user})
+
+@login_required
+def reset_verification(request):
+    user = request.user
+    user.verification_status = 'not_submitted'
+    user.save()
+    return redirect('accounts:verify')

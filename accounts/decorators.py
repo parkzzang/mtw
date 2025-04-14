@@ -1,3 +1,6 @@
+# accounts/decorators.py
+# 반복되는 접근 제어 로직을 @login_and_verified_required로 정리
+
 from django.shortcuts import redirect, render
 from functools import wraps
 
@@ -9,14 +12,13 @@ def login_and_verified_required(view_func):
             return redirect('accounts:login')
 
         if user.verification_status == 'not_submitted':
-            return redirect('accounts:verify')  # 인증 제출하러 감
+            return redirect('accounts:verify')  # 인증 제출 폼
 
         elif user.verification_status == 'pending':
-            return render(request, 'accounts/verify_submitted.html')  # ✅ 안내 템플릿
+            return redirect('accounts:verify')  # ✅ 이걸로 URL까지 이동
 
         elif user.verification_status == 'rejected':
-            return redirect('accounts:verify')  # 반려 → 재제출 유도
+            return redirect('accounts:verify')  # 또는 별도 rejected URL
 
-        # approved는 통과
         return view_func(request, *args, **kwargs)
     return _wrapped_view

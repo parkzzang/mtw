@@ -1,0 +1,13 @@
+{% extends "base_mtw.html" %}
+
+{% block content %}
+  <div class="container mt-5 text-center">
+    <h3 class="text-danger">인증이 반려되었습니다</h3>
+    <p>제출하신 이미지가 기준에 부합하지 않습니다.</p>
+    <p>이름, 전공(또는 자격), 기관명이 명확히 보이도록 다시 제출해주세요.</p>
+
+    <a href="{% url 'accounts:reset_verification' %}" class="btn btn-outline-primary mt-4">
+        다시 인증하기
+      </a>
+  </div>
+{% endblock %}

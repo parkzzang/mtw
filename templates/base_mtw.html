@@ -68,34 +68,47 @@
 
 <body>
 <!-- ✅ 공통 네비게이션 바 -->
-<nav class="navbar navbar-expand-lg" style="background: linear-gradient(70deg, #7C63B4, #5D47A0); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">
-  <div class="container">
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <a class="navbar-brand d-none d-lg-block text-white glow-text" href="/">메디타워</a>
-    <div class="mobile-title position-absolute top-50 start-50 translate-middle d-block d-lg-none">
-      <a class="navbar-brand text-white glow-text" href="/">메디타워</a>
+<nav class="navbar navbar-expand-lg" style="background: linear-gradient(70deg, #5D47A0, #7C63B4); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">
+    <div class="container position-relative">
+      <!-- 모바일용 중앙 타이틀 -->
+      <div class="mobile-title position-absolute top-50 start-50 translate-middle d-block d-lg-none">
+        <a class="navbar-brand text-white glow-text" href="/">메디타워</a>
+      </div>
+  
+      <!-- 데스크탑용 타이틀 -->
+      <a class="navbar-brand d-none d-lg-block text-white glow-text" href="/">메디타워</a>
+  
+      <!-- ✅ 햄버거 버튼을 오른쪽 끝으로 -->
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-center gap-2">
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <span class="navbar-text text-white-50 small">
+                {{ user.username }}님, 안녕하세요.
+              </span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-semibold" href="{}">마이페이지</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-semibold" href="{% url 'accounts:logout' %}">로그아웃</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link text-white fw-semibold" href="{% url 'accounts:login' %}">로그인</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-white fw-semibold" href="{% url 'accounts:signup' %}">회원가입</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
-
-    <div class="collapse navbar-collapse" id="mainNav">
-      <ul class="navbar-nav ms-auto">
-        {% if user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link text-white fw-semibold" href="{% url 'accounts:logout' %}">로그아웃</a>
-          </li>
-        {% else %}
-          <li class="nav-item">
-            <a class="nav-link text-white fw-semibold" href="{% url 'accounts:login' %}">로그인</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link text-white fw-semibold" href="{% url 'accounts:signup' %}">회원가입</a>
-          </li>
-        {% endif %}
-      </ul>
-    </div>
-  </div>
-</nav>
+  </nav>
 
 <main class="container">
   {% block content %}{% endblock %}

@@ -13,4 +13,5 @@ urlpatterns = [
     path('verify/', views.verify_view, name='verify'),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
+    path("verify/reset/", views.reset_verification, name="reset_verification"),
 ]

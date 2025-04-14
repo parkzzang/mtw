@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, LicenseVerification
-
+from django.utils.html import format_html
 
 class UserAdmin(BaseUserAdmin):
     list_display = (
@@ -45,24 +45,16 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(LicenseVerification)
 class LicenseVerificationAdmin(admin.ModelAdmin):
-    list_display = ("user", "status", "submitted_at", "reviewed_at")
-    list_filter = ("status",)
-    search_fields = ("user__username", "user__phone_number")
-    readonly_fields = ("submitted_at",)
+    list_display = ("user", "submitted_at", "document_preview")
+    readonly_fields = ("submitted_at", "document_preview")
 
-    actions = ["approve_selected", "reject_selected"]
-
-    @admin.action(description="✅ 선택한 유저 인증 승인")
-    def approve_selected(self, request, queryset):
-        for license in queryset:
-            license.approve()
-        self.message_user(request, f"{queryset.count()}명의 유저 인증이 승인되었습니다.")
-
-    @admin.action(description="❌ 선택한 유저 인증 반려")
-    def reject_selected(self, request, queryset):
-        for license in queryset:
-            license.reject()
-        self.message_user(request, f"{queryset.count()}명의 유저 인증이 반려되었습니다.")
+    def document_preview(self, obj):
+        if obj.document and obj.document.url:
+            return format_html(
+                '<img src="{}" style="max-height: 300px; border: 1px solid #ccc;" />',
+                obj.document.url
+            )
+        return "이미지 없음"
 
 
 admin.site.register(User, UserAdmin)

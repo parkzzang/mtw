@@ -31,13 +31,19 @@ class SignupForm(UserCreationForm):
         return cleaned_data
 
 
-class VerificationForm(forms.ModelForm):
-    class Meta:
-        model = LicenseVerification
-        fields = ['document']  # ✅ 실제 존재하는 필드만 사용
-        labels = {
-            'document': '면허증 또는 자격증 파일 업로드',
-        }
+class VerificationForm(forms.Form):
+    document = forms.FileField(label="면허증 또는 자격증 업로드")
+
+    def save(self, user):
+        from .models import LicenseVerification
+
+        # 기존 인증기록이 있으면 갱신
+        obj, _ = LicenseVerification.objects.get_or_create(user=user)
+        obj.document = self.cleaned_data['document']
+        obj.save()
+
+        user.verification_status = 'pending'
+        user.save()
 
 
 class LoginForm(forms.Form):
