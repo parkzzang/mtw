@@ -1,7 +1,7 @@
 # accounts/views.py
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
-from .forms import SignupForm, VerificationForm
+from django.contrib.auth import login, logout, authenticate
+from .forms import SignupForm, VerificationForm, LoginForm
 from django.http import JsonResponse
 from .models import PhoneVerification
 from .utils import send_verification_code
@@ -10,7 +10,8 @@ from datetime import timedelta
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
-
+from django.contrib import messages
+from accounts.decorators import login_and_verified_required
 from django.contrib.auth import get_user_model
 
 from django.views.decorators.csrf import csrf_exempt
@@ -117,20 +118,21 @@ def verify_code_view(request):
 @login_required
 def verify_view(request):
     if request.user.is_verified:
-        return redirect('main:index')  # ✅ 자기 자신으로 리다이렉트 X
+        return redirect('main:index')  # 이미 인증된 사용자는 홈으로
 
     if request.method == 'POST':
         form = VerificationForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            form.save()
-            return render(request, 'accounts/verify_submitted.html')  # 완료 메시지
+            user = form.save(commit=False)
+            user.verification_status = 'pending'  # ✅ 상태 변경
+            user.save()
+            return render(request, 'accounts/verify_submitted.html')  # 제출 완료 안내
         else:
-            print("❌ 폼 오류 발생:", form.errors)  # ✅ 서버 콘솔에 출력
+            print("❌ 폼 오류 발생:", form.errors)
     else:
         form = VerificationForm(instance=request.user)
 
     return render(request, 'accounts/verify.html', {'form': form})
-
 
 def verified_required(view_func):
     def _wrapped(request, *args, **kwargs):
@@ -140,3 +142,39 @@ def verified_required(view_func):
             return redirect('accounts:verify')
         return view_func(request, *args, **kwargs)
     return _wrapped
+
+def login_view(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = authenticate(
+                request,
+                username=form.cleaned_data['username'],
+                password=form.cleaned_data['password']
+            )
+            if user is not None:
+                login(request, user)
+                return redirect("main:index")  # 로그인 후 메인페이지로 이동
+            else:
+                messages.error(request, "아이디 또는 비밀번호가 올바르지 않습니다.")
+    else:
+        form = LoginForm()
+
+    return render(request, "accounts/login.html", {"form": form})
+
+@login_and_verified_required
+def dashboard_view(request):
+    return render(request, "main/dashboard.html")
+
+def logout_view(request):
+    logout(request)
+    return redirect("main:landing")
+
+@login_required
+def mypage_view(request):
+    user = request.user
+
+    if user.verification_status == 'pending':
+        return render(request, "accounts/verify_submitted.html")
+
+    return render(request, "accounts/mypage.html", {"user": user})

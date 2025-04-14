@@ -21,26 +21,18 @@
 
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-
-    <!-- 🧑‍⚕️ 직군 선택 -->
-    <div class="mb-3">
-      {{ form.role.label_tag }}
-      {{ form.role }}
-      {% if form.role.errors %}
-        <div class="text-danger small">{{ form.role.errors.0 }}</div>
-      {% endif %}
-    </div>
-
-    <!-- 📷 인증 이미지 업로드 -->
+  
+    <!-- 인증 이미지 업로드 -->
     <div class="mb-4">
-      {{ form.license_image.label_tag }}
-      {{ form.license_image }}
-      {% if form.license_image.errors %}
-        <div class="text-danger small">{{ form.license_image.errors.0 }}</div>
+      {{ form.document.label_tag }}
+      {{ form.document }}
+      {% if form.document.errors %}
+        <div class="text-danger small">{{ form.document.errors.0 }}</div>
       {% endif %}
     </div>
-
+  
     <button type="submit" class="btn btn-primary w-100">제출하기</button>
   </form>
+  
 </div>
 {% endblock %}

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="shortcut icon" href="/static/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/favicon.ico">
+
+    <style>
+        @font-face {
+            font-family: 'NotoSansKR-SemiBold';
+            src: url("/static/fonts/NotoSansKR-SemiBold.ttf") format('truetype');
+            font-weight: 800;
+            font-style: normal;
+        }
+        body {
+            font-family: 'NotoSansKR-SemiBold', sans-serif;
+            overflow-y: scroll;
+        }
+        .mobile-title {
+          transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .mobile-title.hide {
+          opacity: 0;
+          visibility: hidden;
+        }
+        .glow-text {
+          position: relative;
+          color: #fff8dc;
+          font-size: 1.5rem;
+          text-shadow: 0 0 3px #fff8dc, 0 0 6px #ffe066, 0 0 10px #ffcc00;
+          animation: yellowGlow 3s ease-in-out infinite;
+        }
+        @keyframes yellowGlow {
+          0%, 100% {text-shadow: 0 0 3px #fff8dc, 0 0 6px #ffe066, 0 0 10px #ffcc00;}
+          50% {text-shadow: 0 0 2px #fff3b0, 0 0 4px #ffd700, 0 0 6px #ffb700;}
+        }
+        button[type="submit"]:hover {
+          background-color: #5936a2 !important;
+        }
+        .hover-dropdown:hover > .dropdown-menu {
+          display: block;
+          margin-top: 0.5rem;
+          animation: fadeIn 0.2s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-menu.custom-fade {
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(5px);
+          transition: all 0.2s ease-in-out;
+          display: block !important;
+        }
+        .dropdown-menu.custom-fade.showing {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+    </style>
+    <title>{% block title %}메디타워{% endblock %}</title>
+</head>
+
+<body>
+<!-- ✅ 공통 네비게이션 바 -->
+<nav class="navbar navbar-expand-lg" style="background: linear-gradient(70deg, #7C63B4, #5D47A0); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">
+  <div class="container">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand d-none d-lg-block text-white glow-text" href="/">메디타워</a>
+    <div class="mobile-title position-absolute top-50 start-50 translate-middle d-block d-lg-none">
+      <a class="navbar-brand text-white glow-text" href="/">메디타워</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link text-white fw-semibold" href="{% url 'accounts:logout' %}">로그아웃</a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link text-white fw-semibold" href="{% url 'accounts:login' %}">로그인</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-white fw-semibold" href="{% url 'accounts:signup' %}">회원가입</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="container text-center py-4 mt-5 border-top">
+  <small class="text-muted">&copy; 2025 메디타워. All rights reserved.</small>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const navCollapse = document.getElementById('mainNav');
+    const mobileTitle = document.querySelector('.mobile-title');
+
+    navCollapse.addEventListener('show.bs.collapse', function () {
+      mobileTitle.classList.add('hide');
+    });
+
+    navCollapse.addEventListener('hidden.bs.collapse', function () {
+      mobileTitle.classList.remove('hide');
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # accounts/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, PhoneVerification
+from .models import User, PhoneVerification, LicenseVerification
 from django.contrib.auth import get_user_model
 
 class SignupForm(UserCreationForm):
@@ -33,9 +33,13 @@ class SignupForm(UserCreationForm):
 
 class VerificationForm(forms.ModelForm):
     class Meta:
-        model = get_user_model()
-        fields = ['role', 'license_image']
+        model = LicenseVerification
+        fields = ['document']  # ✅ 실제 존재하는 필드만 사용
         labels = {
-            'role': '직군 선택',
-            'license_image': '직군 인증 이미지 (면허증/학생증 등)',
+            'document': '면허증 또는 자격증 파일 업로드',
         }
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(label="아이디", max_length=150)
+    password = forms.CharField(label="비밀번호", widget=forms.PasswordInput)

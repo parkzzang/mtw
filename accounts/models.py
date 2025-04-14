@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
-# Create your models here.
+
 class UserManager(BaseUserManager):
     def create_user(self, username, phone_number, password=None, **extra_fields):
         if not username:
@@ -22,8 +22,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=30, unique=True)  # 로그인 ID
-    phone_number = models.CharField(max_length=20, unique=True)  # 문자 인증용
+    username = models.CharField(max_length=30, unique=True)
+    phone_number = models.CharField(max_length=20, unique=True)
     is_phone_verified = models.BooleanField(default=False)
 
     ROLE_CHOICES = [
@@ -35,21 +35,70 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("용병", "용병"),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    is_verified = models.BooleanField(default=False)
-    license_image = models.ImageField(upload_to='licenses/', null=True, blank=True)
+
+    verification_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('not_submitted', '미제출'),
+            ('pending', '대기 중'),
+            ('approved', '승인 완료'),
+            ('rejected', '반려'),
+        ],
+        default='not_submitted',
+    )
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD = 'username'  # ✅ 로그인할 때 사용되는 ID
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['phone_number', 'role']
 
     objects = UserManager()
 
     def __str__(self):
         return self.username
-    
+
+    @property
+    def is_verified(self):
+        return self.verification_status == 'approved'
+
+
+class LicenseVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='license')
+    document = models.FileField(upload_to="licenses/")
+    status = models.CharField(
+        choices=[
+            ('대기', '대기'),
+            ('승인', '승인'),
+            ('거절', '거절')
+        ],
+        default='대기'
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.status}"
+
+    def is_pending(self):
+        return self.status == "대기"
+
+    def approve(self):
+        self.status = "승인"
+        self.reviewed_at = timezone.now()
+        self.user.verification_status = "approved"
+        self.user.save()
+        self.save()
+
+    def reject(self):
+        self.status = "거절"
+        self.reviewed_at = timezone.now()
+        self.user.verification_status = "rejected"
+        self.user.save()
+        self.save()
+
+
 class PhoneVerification(models.Model):
     phone_number = models.CharField(max_length=20)
     code = models.CharField(max_length=4)
@@ -57,10 +106,3 @@ class PhoneVerification(models.Model):
 
     def is_expired(self):
         return timezone.now() > self.created_at + timedelta(minutes=5)
-    
-class LicenseVerification(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    document = models.FileField(upload_to="licenses/")
-    status = models.CharField(choices=[('대기', '대기'), ('승인', '승인'), ('거절', '거절')], default='대기')
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    reviewed_at = models.DateTimeField(null=True, blank=True)

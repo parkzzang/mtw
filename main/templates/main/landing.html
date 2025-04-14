@@ -1,0 +1,23 @@
+{% extends "base_mtw.html" %}
+{% block title %}메디타워에 오신 걸 환영합니다{% endblock %}
+
+{% block content %}
+<div class="container text-center my-5">
+  <h1 class="fw-bold mb-3">메디타워는,</h1>
+  <p class="lead mb-4">의·치·한·약·수 의료인 및 학생들을 위한 소통과 소개팅 플랫폼입니다.</p>
+
+  {% if user.is_authenticated %}
+    <!-- 🔐 로그인된 사용자 -->
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a href="{% url 'main:index' %}" class="btn btn-primary btn-lg px-4 me-sm-2">사이트 방문</a>
+      <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-lg px-4">로그아웃</a>
+    </div>
+  {% else %}
+    <!-- 🙋 비로그인 사용자 -->
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-lg px-4 me-sm-2">회원가입</a>
+      <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-lg px-4">로그인</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

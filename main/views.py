@@ -1,6 +1,10 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from accounts.decorators import login_and_verified_required
 
 # Create your views here.
-def index(request):
-    return HttpResponse("메디타워 시작!")
+@login_and_verified_required
+def index_view(request):
+    return render(request, "main/index.html")
+
+def landing_view(request):
+    return render(request, "main/landing.html")
