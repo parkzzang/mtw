@@ -8,3 +8,7 @@ def index_view(request):
 
 def landing_view(request):
     return render(request, "main/landing.html")
+
+@login_and_verified_required
+def mypage_view(request):
+    return render(request, "main/mypage.html")

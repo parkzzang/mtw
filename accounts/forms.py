@@ -1,8 +1,10 @@
 # accounts/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, PhoneVerification, LicenseVerification
 from django.contrib.auth import get_user_model
+from datetime import datetime
+
+from .models import User, PhoneVerification, LicenseVerification, Profile
 
 class SignupForm(UserCreationForm):
     username = forms.CharField()
@@ -49,3 +51,33 @@ class VerificationForm(forms.Form):
 class LoginForm(forms.Form):
     username = forms.CharField(label="아이디", max_length=150)
     password = forms.CharField(label="비밀번호", widget=forms.PasswordInput)
+
+
+
+class ProfileForm(forms.ModelForm):
+    BIRTH_YEAR_CHOICES = [(y, str(y)) for y in range(2006, 1974, -1)]
+    birth_year = forms.ChoiceField(choices=BIRTH_YEAR_CHOICES, label="출생 연도")
+
+    class Meta:
+        model = Profile
+        fields = [
+            'photo', 'birth_year', 'region',
+            'bio', 'height', 'weight',
+            'is_smoker', 'religion',
+            'interests', 'mbti', 'ideal_type',
+        ]
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 3}),
+            'ideal_type': forms.Textarea(attrs={'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        required_fields = ['photo', 'birth_year', 'region']
+        for field in required_fields:
+            self.fields[field].required = True
+
+        for field in self.fields:
+            widget = self.fields[field].widget
+            if not isinstance(widget, forms.Textarea):
+                widget.attrs.update({'class': 'form-control'})

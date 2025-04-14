@@ -1,16 +1,38 @@
 {% extends "base_mtw.html" %}
 {% block title %}메디타워에 오신 걸 환영합니다{% endblock %}
 
+
 {% block content %}
-<div class="container text-center my-5">
+<div class="container=fluid text-center my-5">
   <h1 class="fw-bold mb-3">메디타워</h1>
-  <p class="lead mb-4">의·치·한·약·수 의료인 및 학생들을 위한 소통과 소개팅 플랫폼</p>
+  <p class="lead mb-4">의·치·한·약·수 의료인과 학생을 위한 소통 및 소개팅 공간</p>
+  <div class="scrolling-banner-wrapper overflow-hidden py-2 bg-light border-top border-bottom">
+    <div class="scrolling-banner d-inline-block">
+      {% for i in "123" %}
+      <span> 
+        <span class="mx-4">의사</span>
+        <span class="mx-4">치과의사</span>
+        <span class="mx-4">한의사</span>
+        <span class="mx-4">약사</span>
+        <span class="mx-4">수의사</span>
+        <span class="mx-4">의대생</span>
+        <span class="mx-4">치대생</span>
+        <span class="mx-4">한의대생</span>
+        <span class="mx-4">약대생</span>
+        <span class="mx-4">수의대생</span>
+        <span class="mx-4">용병</span> <!-- ✅ 왼쪽 마진만 적용 -->
+      </span>
+      
+      {% endfor %}
+    </div>
+  </div>
+  
+  
 
   {% if user.is_authenticated %}
     <!-- 🔐 로그인된 사용자 -->
     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
       <a href="{% url 'main:index' %}" class="btn btn-primary btn-lg px-4 me-sm-2">사이트 방문</a>
-      <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-lg px-4">로그아웃</a>
     </div>
   {% else %}
     <!-- 🙋 비로그인 사용자 -->

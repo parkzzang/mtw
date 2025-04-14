@@ -1,10 +1,7 @@
 # accounts/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
-from .forms import SignupForm, VerificationForm, LoginForm
 from django.http import JsonResponse
-from .models import PhoneVerification, LicenseVerification
-from .utils import send_verification_code
 from django.utils import timezone
 from datetime import timedelta
 from django.core.validators import RegexValidator
@@ -13,8 +10,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from accounts.decorators import login_and_verified_required
 from django.contrib.auth import get_user_model
-
 from django.views.decorators.csrf import csrf_exempt
+
+from .forms import SignupForm, VerificationForm, LoginForm, ProfileForm
+from .models import PhoneVerification, LicenseVerification, Profile
+from .utils import send_verification_code
 
 def signup_view(request):
     if request.method == "POST":
@@ -203,3 +203,17 @@ def reset_verification(request):
     user.verification_status = 'not_submitted'
     user.save()
     return redirect('accounts:verify')
+
+@login_required
+def edit_profile(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('main:index')  # 저장 후 홈으로 이동
+    else:
+        form = ProfileForm(instance=profile)
+
+    return render(request, 'accounts/edit_profile.html', {'form': form})

@@ -1,0 +1,83 @@
+<!-- templates/accounts/edit_profile.html -->
+{% extends "base_mtw.html" %}
+{% block title %}프로필 작성{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 720px;">
+  <h2 class="mb-4 text-center">프로필 작성</h2>
+  <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    {% csrf_token %}
+
+    <!-- 프로필 사진 -->
+    <div class="mb-3">
+      <label for="id_photo" class="form-label">프로필 사진</label>
+      {{ form.photo }}
+    </div>
+
+    <!-- 나이, 지역 -->
+    <div class="row mb-3">
+      <div class="col">
+        <label for="id_birth_year" class="form-label">출생 연도</label>
+        {{ form.birth_year }}
+      </div>
+      <div class="col">
+        <label for="id_region" class="form-label">활동 지역</label>
+        {{ form.region }}
+      </div>
+    </div>
+
+    <!-- 자기소개 -->
+    <div class="mb-3">
+      <label for="id_bio" class="form-label">자기소개</label>
+      {{ form.bio }}
+    </div>
+
+    <!-- 키, 몸무게 -->
+    <div class="row mb-3">
+      <div class="col">
+        <label for="id_height" class="form-label">키 (cm)</label>
+        {{ form.height }}
+      </div>
+      <div class="col">
+        <label for="id_weight" class="form-label">몸무게 (kg)</label>
+        {{ form.weight }}
+      </div>
+    </div>
+
+    <!-- 흡연 여부, 종교 -->
+    <div class="row mb-3">
+      <div class="col">
+        <label for="id_is_smoker" class="form-label">흡연 여부</label>
+        {{ form.is_smoker }}
+      </div>
+      <div class="col">
+        <label for="id_religion" class="form-label">종교</label>
+        {{ form.religion }}
+      </div>
+    </div>
+
+    <!-- 관심사, MBTI -->
+    <div class="row mb-3">
+      <div class="col">
+        <label for="id_interests" class="form-label">관심사</label>
+        {{ form.interests }}
+      </div>
+      <div class="col">
+        <label for="id_mbti" class="form-label">MBTI</label>
+        {{ form.mbti }}
+      </div>
+    </div>
+
+    <!-- 이상형 -->
+    <div class="mb-3">
+      <label for="id_ideal_type" class="form-label">원하는 매칭 조건</label>
+      {{ form.ideal_type }}
+    </div>
+
+    <!-- 제출 버튼 -->
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary px-5 py-2">저장하기</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

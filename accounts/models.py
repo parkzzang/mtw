@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
+from django.conf import settings
+from datetime import datetime
 
 
 class UserManager(BaseUserManager):
@@ -78,3 +80,39 @@ class PhoneVerification(models.Model):
 
     def is_expired(self):
         return timezone.now() > self.created_at + timedelta(minutes=5)
+
+class Profile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    # 필수 정보
+    photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
+    birth_year = models.PositiveIntegerField(null=True, blank=True)
+    region = models.CharField(max_length=50, null=True, blank=True)
+
+    # 선택 정보
+    bio = models.TextField(blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True, help_text="cm")
+    weight = models.PositiveIntegerField(null=True, blank=True, help_text="kg")
+    is_smoker = models.BooleanField(null=True, blank=True)
+    religion = models.CharField(max_length=20, blank=True)
+    interests = models.CharField(max_length=100, blank=True)
+
+    MBTI_CHOICES = [
+        ('INTJ', 'INTJ'), ('INTP', 'INTP'), ('ENTJ', 'ENTJ'), ('ENTP', 'ENTP'),
+        ('INFJ', 'INFJ'), ('INFP', 'INFP'), ('ENFJ', 'ENFJ'), ('ENFP', 'ENFP'),
+        ('ISTJ', 'ISTJ'), ('ISFJ', 'ISFJ'), ('ESTJ', 'ESTJ'), ('ESFJ', 'ESFJ'),
+        ('ISTP', 'ISTP'), ('ISFP', 'ISFP'), ('ESTP', 'ESTP'), ('ESFP', 'ESFP'),
+        ('CHANGE', '자주 바뀜'), ('UNKNOWN', '알 수 없음'),
+    ]
+    mbti = models.CharField(max_length=10, choices=MBTI_CHOICES, blank=True)
+
+    ideal_type = models.TextField(blank=True, verbose_name="원하는 매칭 조건")
+
+    def __str__(self):
+        return f"{self.user.username}의 프로필"
+
+    @property
+    def age(self):
+        if self.birth_year:
+            return datetime.now().year - self.birth_year + 1  # 한국식 나이 기준
+        return None
