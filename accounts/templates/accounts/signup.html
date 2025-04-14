@@ -1,11 +1,318 @@
-{% extends "base.html" %}  <!-- 네비게이션 없는 버전 -->
+{% extends "base.html" %}
+{% load form_extras %}
+
+{% block title %}회원가입 | 메디타워{% endblock %}
 
 {% block content %}
-  <h2>회원가입</h2>
-  <!-- signup.html -->
+
+{% if form.errors %}
+  <div class="alert alert-danger">
+    <ul class="mb-0">
+      {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+          <li>
+            {% if field != "__all__" %}
+              {% with form|get_item:field as form_field %}
+                <strong>{{ form_field.label }}:</strong>
+              {% endwith %}
+            {% endif %}
+            {{ error }}
+          </li>
+        {% endfor %}
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+
+<div class="container my-5" style="max-width: 500px;">
+  <h3 class="text-center mb-4 fw-bold text-dark">회원가입</h3>
+
   <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">가입</button>
+
+    <!-- username -->
+    <div class="form-floating position-relative">
+      <input type="text"
+             class="form-control pe-5"
+             name="username"
+             id="username"
+             value="{{ form.username.value|default_if_none:'' }}"
+             placeholder="아이디"
+             required>
+      <label for="username">아이디</label>
+    
+      <button type="button"
+              class="btn btn-outline-secondary btn-sm position-absolute end-0 top-50 translate-middle-y me-2"
+              onclick="checkUsername()">
+        중복확인
+      </button>
+    </div>
+    <div id="username-check-msg" class="mb-3 small text-muted"></div>
+
+    
+    <!-- 전화번호 -->
+<div class="form-floating my-3 position-relative">
+  <input type="text"
+         class="form-control"
+         name="phone_number"
+         id="id_phone_number"
+         value="{{ form.phone_number.value|default_if_none:'' }}"
+         placeholder="전화번호"
+         required>
+  <label for="id_phone_number">전화번호</label>
+
+  <button type="button" class="btn btn-outline-primary mt-2 position-absolute end-0 top-0 mt-2 me-2" onclick="sendCode()">
+    인증
+  </button>
+</div>
+<span id="timer-msg" class="text-muted small"></span>
+
+<!-- 인증번호 입력란 (한 줄에 버튼 포함) -->
+<div class="mb-3" id="code-box" style="display: none;">
+  <div class="d-flex gap-2 align-items-center">
+    <div class="form-floating flex-grow-1">
+      <input type="text"
+             class="form-control"
+             name="verification_code"
+             id="id_verification_code"
+             value="{{ form.verification_code.value|default_if_none:'' }}"
+             placeholder="인증번호">
+      <label for="id_verification_code">인증번호</label>
+    </div>
+    <button type="button" class="btn btn-success h-100" onclick="verifyCode()">확인</button>
+  </div>
+</div>
+
+
+<!-- 인증 상태 메시지 -->
+<div id="verify-message" class="mt-2 fw-semibold"></div>
+
+<!-- 비밀번호 -->
+<div class="form-floating mb-3 position-relative">
+  <input type="password"
+         class="form-control pe-5"
+         name="password1"
+         id="id_password1"
+         placeholder="비밀번호"
+         required>
+  <label for="id_password1">비밀번호</label>
+  <i class="bi bi-eye-fill position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer"
+     style="z-index: 2; font-size: 1.2rem;"
+     onclick="togglePassword('id_password1', this)"></i>
+</div>
+
+<!-- 비밀번호 확인 -->
+<div class="form-floating mb-3 position-relative">
+  <input type="password"
+         class="form-control pe-5"
+         name="password2"
+         id="id_password2"
+         placeholder="비밀번호 확인"
+         required>
+  <label for="id_password2">비밀번호 확인</label>
+  <i class="bi bi-eye-fill position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer"
+     style="z-index: 2; font-size: 1.2rem;"
+     onclick="togglePassword('id_password2', this)"></i>
+</div>
+
+<!-- 이용약관 및 개인정보처리방침 동의 -->
+<div class="form-check mb-2">
+  <input class="form-check-input" type="checkbox" id="agreeTerms" name="agree_terms" required>
+  <label class="form-check-label" for="agreeTerms">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">이용약관</a>에 동의합니다. (필수)
+  </label>
+</div>
+
+<div class="form-check mb-4">
+  <input class="form-check-input" type="checkbox" id="agreePrivacy" name="agree_privacy" required>
+  <label class="form-check-label" for="agreePrivacy">
+    <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">개인정보처리방침</a>에 동의합니다. (필수)
+  </label>
+</div>
+
+
+
+    <button type="submit" class="btn btn-primary w-100">가입 조건 확인하기</button>
   </form>
+</div>
+
+<!-- ✅ 전화번호 인증 JS -->
+<script>
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken'); 
+function sendCode() {
+  const phone = document.getElementById("id_phone_number").value;
+  fetch("{% url 'accounts:send_code' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": csrftoken
+    },
+    body: `phone_number=${phone}`
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.message) {
+      alert(data.message);
+      document.getElementById("code-box").style.display = "block";
+    } else {
+      alert(data.error || "전송 실패");
+    }
+  });
+}
+
+function verifyCode() {
+  const phoneInput = document.getElementById("id_phone_number");
+  const codeInput = document.getElementById("id_verification_code");
+  const verifyBtn = document.querySelector("#code-box button");  // 확인 버튼
+  const sendBtn = document.querySelector("button[onclick='sendCode()']");
+  const timerMsg = document.getElementById("timer-msg");
+  const messageEl = document.getElementById("verify-message");
+
+  const phone = phoneInput.value;
+  const code = codeInput.value;
+
+  fetch("{% url 'accounts:verify_code' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": csrftoken
+    },
+    body: `phone_number=${encodeURIComponent(phone)}&code=${encodeURIComponent(code)}`
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.result) {
+      messageEl.innerText = "📱 전화번호 인증이 완료되었습니다!";
+      messageEl.className = "text-success";
+
+      // 입력 및 버튼 비활성화
+      phoneInput.readOnly = true;
+      phoneInput.classList.add("form-control-plaintext"); // 회색 스타일
+      codeInput.readOnly = true;
+      verifyBtn.disabled = true;
+      sendBtn.disabled = true;
+      timerMsg.innerText = "";
+
+      // cooldown 타이머도 중단
+      if (cooldownTimer) clearInterval(cooldownTimer);
+
+    } else {
+      messageEl.innerText = data.error || "인증 실패";
+      messageEl.className = "text-danger";
+    }
+  });
+}
+
+</script>
+<script>
+  let cooldownTimer = null;
+  let cooldownSeconds = 60;  // 1분
+  
+  function startCooldown() {
+    let remaining = cooldownSeconds;
+    const sendBtn = document.querySelector("button[onclick='sendCode()']");
+    const timerMsg = document.getElementById("timer-msg");
+  
+    sendBtn.disabled = true;
+  
+    function update() {
+      const min = Math.floor(remaining / 60);
+      const sec = remaining % 60;
+      timerMsg.innerText = `(${min}:${sec.toString().padStart(2, '0')} 후 재요청 가능)`;
+    }
+  
+    update();  // 처음 표시
+    cooldownTimer = setInterval(() => {
+      remaining -= 1;
+      update();
+      if (remaining <= 0) {
+        clearInterval(cooldownTimer);
+        sendBtn.disabled = false;
+        timerMsg.innerText = '';
+      }
+    }, 1000);
+  }
+  
+  function sendCode() {
+    const phone = document.getElementById("id_phone_number").value;
+    fetch("{% url 'accounts:send_code' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": csrftoken
+      },
+      body: `phone_number=${encodeURIComponent(phone)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.message) {
+        alert(data.message);
+        document.getElementById("code-box").style.display = "block";
+        startCooldown();  // 타이머 시작
+      } else {
+        alert(data.error || "전송 실패");
+      }
+    });
+  }
+  </script>
+  <script>
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+      const isPassword = input.type === "password";
+    
+      input.type = isPassword ? "text" : "password";
+    
+      // 아이콘 토글
+      icon.classList.toggle("bi-eye-fill", !isPassword);
+      icon.classList.toggle("bi-eye-slash-fill", isPassword);
+    }
+    </script>
+    <script>
+      function checkUsername() {
+        const username = document.getElementById("username").value.trim();
+        const msgEl = document.getElementById("username-check-msg");
+      
+        if (!username) {
+          msgEl.innerText = "아이디를 입력해주세요.";
+          msgEl.className = "small mt-1 text-danger";
+          return;
+        }
+      
+        fetch("{% url 'accounts:check_username' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrftoken,
+          },
+          body: `username=${encodeURIComponent(username)}`
+        })
+        .then(res => res.json())
+        .then(data => {
+          msgEl.innerText = data.message;
+          msgEl.className = data.available ? "small mt-1 text-success" : "small mt-1 text-danger";
+        })
+        .catch(() => {
+          msgEl.innerText = "오류가 발생했습니다.";
+          msgEl.className = "small mt-1 text-danger";
+        });
+      }
+      </script>
+      
+    
 {% endblock %}

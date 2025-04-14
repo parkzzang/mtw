@@ -36,6 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     is_verified = models.BooleanField(default=False)
+    license_image = models.ImageField(upload_to='licenses/', null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -51,14 +52,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 class PhoneVerification(models.Model):
     phone_number = models.CharField(max_length=20)
-    code = models.CharField(max_length=6)
+    code = models.CharField(max_length=4)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_expired(self):
         return timezone.now() > self.created_at + timedelta(minutes=5)
-
-    def __str__(self):
-        return f"{self.phone_number} - {self.code}"
     
 class LicenseVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
